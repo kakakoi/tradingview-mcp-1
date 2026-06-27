@@ -18,6 +18,18 @@ Use this skill when TradingView MCP fails and we need to decide whether to:
 
 Treat `origin` (`https://github.com/tradesdontlie/tradingview-mcp.git`) as upstream and `fork` (`https://github.com/kakakoi/tradingview-mcp-1.git`) as the personal fork. Do not push to `origin`.
 
+## Triggers
+
+Use this skill when the user says:
+
+- TV MCPが壊れた
+- 本家で直っているか確認して
+- このpatchまだ必要？
+- 本家更新を見て
+- upstreamと比較して
+- TradingView MCP failure-driven sync
+- MCPの自浄作用を回して
+
 ## Default Mode
 
 Use `consult` by default. Use `ops-finalize` only when the user explicitly asks to record, commit, or push documentation or policy changes. Use a separate `tv-validate` prompt for any TradingView smoke.
@@ -72,9 +84,20 @@ Use `consult` by default. Use `ops-finalize` only when the user explicitly asks 
    - `needs-user-choice`
 8. Recommend one next action only.
 
+## Repository Rules
+
+- Use `tradingview-public-49222` as the canonical MCP route.
+- Use `127.0.0.1:49222` as the canonical CDP endpoint.
+- Treat `C:\tv-mcp-public-test` as the stable local repo.
+- Use `C:\tv-mcp-upstream-test` for optional upstream smoke in a separate worktree.
+- Treat `tradingview-mcp-pine-editor-fix` as the personal fork branch.
+- Push only to `fork`, normally with `git push fork HEAD:tradingview-mcp-pine-editor-fix`, and only when explicitly asked.
+
 ## Hard Prohibitions
 
 - Do not push to upstream.
+- Do not push to `origin`.
+- Do not force push.
 - Do not run `git pull`.
 - Do not merge.
 - Do not rebase.
@@ -88,6 +111,8 @@ Use `consult` by default. Use `ops-finalize` only when the user explicitly asks 
 - Do not print Pine source.
 - Do not expose secrets, tokens, cookies, localStorage, or account data.
 - Do not enable automatic pull/update on MCP startup.
+- Do not stage `package-lock.json` unless the task explicitly targets dependency changes.
+- Do not change `src/core/pine.js`, `src/tools/pine.js`, `src/connection.js`, `src/core/tab.js`, or `start-tv-49222.ps1` during consult-mode upstream comparison.
 
 ## Output
 

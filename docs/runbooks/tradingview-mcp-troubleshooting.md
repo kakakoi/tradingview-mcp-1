@@ -74,6 +74,16 @@ When a TradingView MCP failure occurs:
 7. Push only to a personal fork.
 8. Record the decision in this runbook.
 
+Relevant upstream files to check first:
+
+- `src/core/pine.js`
+- `src/tools/pine.js`
+- `src/core/data.js`
+- `src/tools/data.js`
+- `src/core/ui.js`
+- `src/connection.js`
+- `src/core/tab.js`
+
 Status labels:
 
 - `patch-still-needed`
@@ -91,6 +101,8 @@ Recommended layout:
 - Personal fork branch: `tradingview-mcp-pine-editor-fix`
 
 Do not enable automatic pull/update on each MCP startup. Use controlled upstream checks after failure or on explicit request.
+
+In `consult`, do not pull, merge, rebase, cherry-pick, reset, edit files, run TradingView MCP, reflect Pine source, compile, add to chart, or read Strategy Tester metrics during the upstream comparison. End with exactly one recommended next action.
 
 ## Confirmed Fixes
 
