@@ -61,6 +61,37 @@ Use this runbook mostly in `consult` for diagnosis design and in `tv-validate` f
 - Strategy Tester extraction bug: internal or DOM metrics paths cannot find metrics even after a strategy is visible.
 - TradingView runtime error: console errors such as `unexpected study id` may indicate chart layout or study restoration problems.
 
+## Failure-driven upstream sync
+
+When a TradingView MCP failure occurs:
+
+1. Classify the failed layer first.
+2. Do not immediately patch local code.
+3. Check whether upstream `tradesdontlie/tradingview-mcp` has changed related files.
+4. Prefer checking upstream in a separate worktree rather than modifying the stable local working tree.
+5. If upstream fixes the failed layer, prefer upstream and consider retiring the local patch.
+6. If upstream does not fix the failed layer, keep or create the smallest local patch.
+7. Push only to a personal fork.
+8. Record the decision in this runbook.
+
+Status labels:
+
+- `patch-still-needed`
+- `patch-obsolete`
+- `upstream-likely-fixes`
+- `upstream-unknown-test-needed`
+- `needs-local-minimal-patch`
+- `blocked-wait-for-upstream`
+- `needs-user-choice`
+
+Recommended layout:
+
+- Stable local repo: `C:\tv-mcp-public-test`
+- Optional upstream test worktree: `C:\tv-mcp-upstream-test`
+- Personal fork branch: `tradingview-mcp-pine-editor-fix`
+
+Do not enable automatic pull/update on each MCP startup. Use controlled upstream checks after failure or on explicit request.
+
 ## Confirmed Fixes
 
 - `pine_new(strategy)` now has a `pineEditorTestApi` path in commit `b09edd6`.
@@ -132,4 +163,6 @@ Use this runbook mostly in `consult` for diagnosis design and in `tv-validate` f
 | Action tried once | |
 | Result | |
 | Classification | |
+| Upstream check | |
+| Patch status | |
 | Next one action | |
