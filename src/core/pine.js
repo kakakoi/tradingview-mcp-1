@@ -109,6 +109,51 @@ async function tryPineEditorTestApiNewScript({ template }) {
   `);
 }
 
+async function tryPineEditorTestApiSetSource({ source }) {
+  const escaped = JSON.stringify(source);
+  return await evaluateAsync(`
+    (function() {
+      var source = ${escaped};
+      var api = null;
+      var stage = 'get_test_api';
+      try {
+        api = window.TradingViewApi && typeof window.TradingViewApi.pineEditorTestApi === 'function'
+          ? window.TradingViewApi.pineEditorTestApi()
+          : null;
+      } catch (e) {
+        return { success: false, stage: stage, error: e && e.message || String(e) };
+      }
+
+      if (!api) return { success: false, stage: stage, error: 'pineEditorTestApi unavailable' };
+      if (typeof api.setEditorText !== 'function') return { success: false, stage: 'capability', error: 'setEditorText unavailable' };
+
+      return Promise.resolve()
+        .then(function() {
+          if (typeof api.openEditor === 'function') {
+            stage = 'openEditor';
+            return api.openEditor();
+          }
+        })
+        .then(function() {
+          stage = 'setEditorText';
+          return api.setEditorText(source);
+        })
+        .then(function() {
+          if (typeof api.focusEditor === 'function') {
+            stage = 'focusEditor';
+            return api.focusEditor();
+          }
+        })
+        .then(function() {
+          return { success: true, source: 'pineEditorTestApi' };
+        })
+        .catch(function(e) {
+          return { success: false, stage: stage, error: e && e.message || String(e) };
+        });
+    })()
+  `);
+}
+
 // ── Pure / offline functions ──
 
 export function analyze({ source }) {
@@ -300,8 +345,42 @@ export async function getSource() {
 }
 
 export async function setSource({ source }) {
+  const linesSet = source.split('\n').length;
+  const charsSet = source.length;
+  let testApiFallback = null;
+
+  try {
+    const testApiResult = await tryPineEditorTestApiSetSource({ source });
+    if (testApiResult?.success) {
+      return {
+        success: true,
+        source: 'pineEditorTestApi',
+        action: 'setEditorText',
+        lines_set: linesSet,
+        chars_set: charsSet,
+      };
+    }
+    testApiFallback = {
+      stage: testApiResult?.stage || 'unknown',
+      error: testApiResult?.error || 'pineEditorTestApi setEditorText failed',
+    };
+  } catch (e) {
+    testApiFallback = {
+      stage: 'evaluate_test_api',
+      error: e && e.message || String(e),
+    };
+  }
+
   const editorReady = await ensurePineEditorOpen();
-  if (!editorReady) throw new Error('Could not open Pine Editor.');
+  if (!editorReady) {
+    return {
+      success: false,
+      source: 'legacy_monaco_setValue',
+      stage: 'ensurePineEditorOpen',
+      error: 'Could not open Pine Editor.',
+      testApiFallback,
+    };
+  }
 
   const escaped = JSON.stringify(source);
   const set = await evaluate(`
@@ -313,8 +392,24 @@ export async function setSource({ source }) {
     })()
   `);
 
-  if (!set) throw new Error('Monaco found but setValue() failed.');
-  return { success: true, lines_set: source.split('\n').length };
+  if (!set) {
+    return {
+      success: false,
+      source: 'legacy_monaco_setValue',
+      stage: 'legacy_monaco_setValue',
+      error: 'Monaco found but setValue() failed.',
+      testApiFallback,
+    };
+  }
+
+  return {
+    success: true,
+    source: 'legacy_monaco_setValue',
+    action: 'setValue',
+    lines_set: linesSet,
+    chars_set: charsSet,
+    testApiFallback,
+  };
 }
 
 export async function compile() {
@@ -353,6 +448,51 @@ export async function compile() {
 
   await new Promise(r => setTimeout(r, 2000));
   return { success: true, button_clicked: clicked || 'keyboard_shortcut', source: 'dom_fallback' };
+}
+
+export async function addToChart() {
+  const editorReady = await ensurePineEditorOpen();
+  if (!editorReady) {
+    return {
+      success: false,
+      source: 'pineEditorTestApi',
+      action: 'addScriptOnChart',
+      stage: 'ensurePineEditorOpen',
+      error: 'Could not open Pine Editor.',
+    };
+  }
+
+  const result = await evaluateAsync(`
+    (function() {
+      var api = null;
+      try {
+        api = window.TradingViewApi && typeof window.TradingViewApi.pineEditorTestApi === 'function'
+          ? window.TradingViewApi.pineEditorTestApi()
+          : null;
+      } catch (e) {
+        return { success: false, source: 'pineEditorTestApi', action: 'addScriptOnChart', stage: 'get_test_api', error: e && e.message || String(e) };
+      }
+
+      if (!api) {
+        return { success: false, source: 'pineEditorTestApi', action: 'addScriptOnChart', stage: 'get_test_api', error: 'pineEditorTestApi unavailable' };
+      }
+
+      if (typeof api.addScriptOnChart !== 'function') {
+        return { success: false, source: 'pineEditorTestApi', action: 'addScriptOnChart', stage: 'capability', error: 'addScriptOnChart unavailable' };
+      }
+
+      return Promise.resolve()
+        .then(function() { return api.addScriptOnChart(); })
+        .then(function() {
+          return { success: true, source: 'pineEditorTestApi', action: 'addScriptOnChart', stage: 'addScriptOnChart', error: null };
+        })
+        .catch(function(e) {
+          return { success: false, source: 'pineEditorTestApi', action: 'addScriptOnChart', stage: 'addScriptOnChart', error: e && e.message || String(e) };
+        });
+    })()
+  `);
+
+  return result;
 }
 
 export async function getErrors() {

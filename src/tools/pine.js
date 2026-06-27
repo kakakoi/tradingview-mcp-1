@@ -20,6 +20,11 @@ export function registerPineTools(server) {
     catch (err) { return jsonResult({ success: false, error: err.message }, true); }
   });
 
+  server.tool('pine_add_to_chart', 'Add the current Pine Script to the chart via Pine Editor API', {}, async () => {
+    try { return jsonResult(await core.addToChart()); }
+    catch (err) { return jsonResult({ success: false, source: 'pineEditorTestApi', action: 'addScriptOnChart', stage: 'tool', error: err.message }, true); }
+  });
+
   server.tool('pine_get_errors', 'Get Pine Script compilation errors from Monaco markers', {}, async () => {
     try { return jsonResult(await core.getErrors()); }
     catch (err) { return jsonResult({ success: false, error: err.message }, true); }
