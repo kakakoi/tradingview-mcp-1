@@ -15,6 +15,28 @@ Use this runbook mostly in `consult` for diagnosis design and in `tv-validate` f
 - Do not read or print Pine source, cookies, tokens, localStorage, or personal account data during diagnosis.
 - Do not compile, add to chart, fetch Strategy Tester metrics, or change strategy logic unless the active work mode explicitly allows it.
 
+## Smoke Execution Rules
+
+- Do not assume registered MCP and freshly spawned MCP processes use the same CDP endpoint.
+- Registered `tradingview-public-49222` may have `TV_CDP_PORT=49222`, while a manually spawned local MCP process may fall back to `9222`.
+- When starting any fresh MCP process for smoke tests, explicitly set:
+  - `TV_CDP_HOST=127.0.0.1`
+  - `TV_CDP_PORT=49222`
+- Before smoke, confirm:
+  - `http://127.0.0.1:49222/json/version`
+  - or `tradingview-public-49222.tv_health_check`
+- After editing MCP source files, restart the MCP server before testing.
+- If a patched tool does not return expected new fields such as `source`, suspect stale MCP server code first.
+- For `pine_new`, expected patched success includes:
+  - `source: "pineEditorTestApi"`
+- For `pine_set_source`, expected patched success includes:
+  - `source: "pineEditorTestApi"`
+  - `action: "setEditorText"`
+  - `lines_set` or `chars_set`
+- If smoke fails with `CDP connection failed` while health check succeeds, compare the connection path and environment variables before retrying the tool.
+- If MCP transport closes, do not retry the same operation repeatedly. Start a new Codex session or reconnect MCP, then run exactly one smoke.
+- Smoke tests must stop after one layer. Do not continue from source reflection to compile, add-to-chart, or Strategy Tester metrics unless explicitly requested.
+
 ## Layer Order
 
 1. CDP reachability: confirm `127.0.0.1:49222` responds.
