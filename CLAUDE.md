@@ -1,6 +1,15 @@
 # TradingView MCP — Claude Instructions
 
-68 tools for reading and controlling a live TradingView Desktop chart via CDP (port 9222).
+Tools for reading and controlling a live TradingView Desktop chart via the canonical `tradingview-public-49222` MCP route.
+
+## Canonical Route
+
+- Use only `tradingview-public-49222`.
+- Use only CDP `127.0.0.1:49222`.
+- Do not use legacy `tradingview`, `tv_launch`, or `9222`.
+- For freshly spawned local MCP smoke processes, set:
+  - `TV_CDP_HOST=127.0.0.1`
+  - `TV_CDP_PORT=49222`
 
 ## Decision Tree — Which Tool When
 
@@ -81,8 +90,15 @@ Use `study_filter` parameter to target a specific indicator by name substring (e
 - `capture_screenshot` → take a screenshot (regions: "full", "chart", "strategy_tester")
 
 ### "TradingView isn't running"
-- `tv_launch` → auto-detect and launch TradingView with CDP on Mac/Win/Linux
-- `tv_health_check` → verify connection is working
+- Do not use `tv_launch`.
+- Confirm the canonical CDP endpoint `127.0.0.1:49222`.
+- Use `tv_health_check` only through `tradingview-public-49222` to verify connection health.
+
+### "Strategy Tester metrics are empty"
+- If `data_get_strategy_results` returns `success: true` with `metric_count: 0` or `metrics: {}`, classify it as `Strategy Tester extraction bug` when the strategy is visible or Strategy Tester UI recognizes it.
+- Do not repeatedly retry metrics extraction.
+- Do not immediately inspect or patch local MCP source.
+- Route the next action to `tv-mcp-failure-driven-sync`.
 
 ## Context Management Rules
 
@@ -123,7 +139,7 @@ These tools can return large payloads. Follow these rules to avoid context bloat
 ## Architecture
 
 ```
-Claude Code ←→ MCP Server (stdio) ←→ CDP (localhost:9222) ←→ TradingView Desktop (Electron)
+Claude Code ←→ `tradingview-public-49222` MCP Server (stdio) ←→ CDP (`127.0.0.1:49222`) ←→ TradingView Desktop (Electron)
 ```
 
 Pine graphics path: `study._graphics._primitivesCollection.dwglines.get('lines').get(false)._primitivesDataById`
