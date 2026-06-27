@@ -23,6 +23,12 @@ Treat `origin` (`https://github.com/tradesdontlie/tradingview-mcp.git`) as upstr
 Use this skill when the user says:
 
 - TV MCPが壊れた
+- Strategy Tester extraction bug
+- metric_count: 0
+- metrics: {}
+- data_get_strategy_results returned empty metrics
+- data_get_strategy_results returned No strategy found
+- Strategy Tester UI has values but MCP returned empty metrics
 - 本家で直っているか確認して
 - このpatchまだ必要？
 - 本家更新を見て
@@ -47,6 +53,7 @@ Use `consult` by default. Use `ops-finalize` only when the user explicitly asks 
    - study recognition
    - Strategy Tester recognition
    - metrics extraction
+   - Strategy Tester extraction bug
 2. Do not patch immediately.
 3. Check current local state:
    - branch

@@ -24,6 +24,8 @@ timeframes: ["15"]
 action: "get_strategy_results"
 ```
 
+If Strategy Tester metrics return `metric_count: 0`, `metrics: {}`, or otherwise empty structured metrics, stop the current analysis loop, classify it as `Strategy Tester extraction bug`, and route to `tv-mcp-failure-driven-sync`. Do not repeatedly retry metrics extraction or patch local MCP source inside this skill.
+
 ### For Screenshot Comparison
 Use `batch_run` with action `screenshot`:
 ```

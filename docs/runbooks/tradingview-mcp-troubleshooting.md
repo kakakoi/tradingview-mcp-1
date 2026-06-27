@@ -61,6 +61,14 @@ Use this runbook mostly in `consult` for diagnosis design and in `tv-validate` f
 - Strategy Tester extraction bug: internal or DOM metrics paths cannot find metrics even after a strategy is visible.
 - TradingView runtime error: console errors such as `unexpected study id` may indicate chart layout or study restoration problems.
 
+## Failure Routing Table
+
+| Symptom | Classification | Next skill | Stop rule |
+|---|---|---|---|
+| `data_get_strategy_results` returns `success: true`, `metric_count: 0`, `metrics: {}` | Strategy Tester extraction bug | `tv-mcp-failure-driven-sync` | Do not patch local source in the capture task. |
+| Strategy is visible as a chart study, but trades/results APIs return `No strategy found` | Strategy Tester recognition or extraction bug | `tv-mcp-failure-driven-sync` | Do not infer health from chart study visibility. |
+| Strategy Tester UI has values, but structured API is empty | Strategy Tester extraction bug | `tv-mcp-failure-driven-sync` | UI values may be recorded as observed evidence only. |
+
 ## Failure-driven upstream sync
 
 When a TradingView MCP failure occurs:

@@ -67,6 +67,8 @@ After clean compilation:
 2. `data_get_strategy_results` — if it's a strategy, check performance
 3. Show the user the results
 
+If Strategy Tester metrics return `metric_count: 0`, `metrics: {}`, or otherwise empty structured metrics, stop the current analysis loop, classify it as `Strategy Tester extraction bug`, and route to `tv-mcp-failure-driven-sync`. Do not repeatedly retry metrics extraction or patch local MCP source inside this skill.
+
 ## Step 7: Iterate
 
 If the user wants changes:

@@ -16,6 +16,8 @@ Collect all available performance data:
 4. `chart_get_state` — current symbol, timeframe, and studies on chart
 5. `symbol_info` — symbol metadata for context
 
+If Strategy Tester metrics return `metric_count: 0`, `metrics: {}`, or otherwise empty structured metrics, stop the current analysis loop, classify it as `Strategy Tester extraction bug`, and route to `tv-mcp-failure-driven-sync`. Do not repeatedly retry metrics extraction or patch local MCP source inside this skill.
+
 ## Step 2: Capture Visuals
 
 1. `capture_screenshot` with region "chart" — the chart with strategy overlay
