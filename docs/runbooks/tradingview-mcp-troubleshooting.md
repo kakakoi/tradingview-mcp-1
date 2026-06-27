@@ -4,6 +4,8 @@
 
 Reusable checklist for TradingView MCP failures around Pine Editor, Monaco detection, strategy recognition, and Strategy Tester metrics. Use this to keep incident response narrow, reproducible, and separated from Pine strategy changes.
 
+Use this runbook mostly in `consult` for diagnosis design and in `tv-validate` for one-layer smoke tests. Use `ops-finalize` only for recording or committing the runbook/result. Do not use it to justify broad multi-step TradingView operations.
+
 ## Fixed Rules
 
 - Use only the canonical MCP route: `tradingview-public-49222`.
@@ -83,6 +85,7 @@ Reusable checklist for TradingView MCP failures around Pine Editor, Monaco detec
 - Do not stage unrelated files such as `package-lock.json`, `src/connection.js`, `src/core/tab.js`, or local launch scripts unless the task explicitly targets them.
 - Do not repeatedly call the same TradingView MCP operation after one clear failure.
 - Do not use `chart_manage_indicator(add)` as the primary way to restore a local custom Pine strategy without a separate recovery plan.
+- Do not call `chart_manage_indicator(remove)` on a local custom Pine strategy unless the restore path is already confirmed.
 - Do not infer Strategy Tester health from chart study visibility alone.
 - Do not mix Pine source changes, TradingView validation, report updates, and commit/push into one implicit task.
 
@@ -94,3 +97,17 @@ Reusable checklist for TradingView MCP failures around Pine Editor, Monaco detec
 - Add a read-only diagnostic for Strategy Tester recognition before metrics extraction.
 - Consider a minimal patch for newer bottom panel close behavior if UI close/toggle issues recur.
 - Consider a safe cleanup path for failed `chart_manage_indicator(add)` states before later Pine operations.
+
+## Incident Note Template
+
+| Field | Value |
+|---|---|
+| Mode | |
+| MCP route | |
+| CDP | |
+| Layer | |
+| Fixed conditions | |
+| Action tried once | |
+| Result | |
+| Classification | |
+| Next one action | |
