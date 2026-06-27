@@ -73,6 +73,42 @@ export async function ensurePineEditorOpen() {
   return false;
 }
 
+async function tryPineEditorTestApiNewScript({ template }) {
+  const escaped = JSON.stringify(template);
+  return await evaluateAsync(`
+    (function() {
+      var source = ${escaped};
+      var api = null;
+      try {
+        api = window.TradingViewApi && typeof window.TradingViewApi.pineEditorTestApi === 'function'
+          ? window.TradingViewApi.pineEditorTestApi()
+          : null;
+      } catch (e) {
+        return { success: false, stage: 'get_test_api', error: e && e.message || String(e) };
+      }
+
+      if (!api) return { success: false, stage: 'get_test_api', error: 'pineEditorTestApi unavailable' };
+      if (typeof api.openEditor !== 'function') return { success: false, stage: 'capability', error: 'openEditor unavailable' };
+      if (typeof api.openNewScript !== 'function') return { success: false, stage: 'capability', error: 'openNewScript unavailable' };
+      if (typeof api.setEditorText !== 'function') return { success: false, stage: 'capability', error: 'setEditorText unavailable' };
+
+      return Promise.resolve()
+        .then(function() { return api.openEditor(); })
+        .then(function() { return api.openNewScript(); })
+        .then(function() { return api.setEditorText(source); })
+        .then(function() {
+          if (typeof api.focusEditor === 'function') return api.focusEditor();
+        })
+        .then(function() {
+          return { success: true, source: 'pineEditorTestApi' };
+        })
+        .catch(function(e) {
+          return { success: false, stage: 'test_api_flow', error: e && e.message || String(e) };
+        });
+    })()
+  `);
+}
+
 // ── Pure / offline functions ──
 
 export function analyze({ source }) {
@@ -506,9 +542,6 @@ export async function smartCompile() {
 }
 
 export async function newScript({ type }) {
-  const editorReady = await ensurePineEditorOpen();
-  if (!editorReady) throw new Error('Could not open Pine Editor.');
-
   const typeMap = { indicator: 'indicator', strategy: 'strategy', library: 'library' };
   const templates = {
     indicator: '//@version=6\nindicator("My script")\nplot(close)',
@@ -517,6 +550,21 @@ export async function newScript({ type }) {
   };
 
   const template = templates[type] || templates.indicator;
+
+  const testApiResult = await tryPineEditorTestApiNewScript({ template });
+  if (testApiResult?.success) {
+    return { success: true, type, action: 'new_script_created', template: typeMap[type], source: testApiResult.source };
+  }
+
+  const editorReady = await ensurePineEditorOpen();
+  if (!editorReady) {
+    throw new Error(
+      'Could not open Pine Editor. ' +
+      'testApiStage=' + (testApiResult?.stage || 'unknown') + '; ' +
+      'testApiError=' + (testApiResult?.error || 'none') + '; ' +
+      'fallbackStage=ensurePineEditorOpen'
+    );
+  }
 
   // Simply set the source to a new template — this is the most reliable approach
   const escaped = JSON.stringify(template);
@@ -529,9 +577,23 @@ export async function newScript({ type }) {
     })()
   `);
 
-  if (!set) throw new Error('Monaco editor not found. Ensure Pine Editor is open.');
+  if (!set) {
+    throw new Error(
+      'Monaco editor not found. Ensure Pine Editor is open. ' +
+      'testApiStage=' + (testApiResult?.stage || 'unknown') + '; ' +
+      'testApiError=' + (testApiResult?.error || 'none') + '; ' +
+      'fallbackStage=setValue'
+    );
+  }
 
-  return { success: true, type, action: 'new_script_created', template: typeMap[type] };
+  return {
+    success: true,
+    type,
+    action: 'new_script_created',
+    template: typeMap[type],
+    source: 'legacy_monaco_setValue',
+    testApiFallback: testApiResult?.error ? testApiResult : undefined,
+  };
 }
 
 export async function openScript({ name }) {
